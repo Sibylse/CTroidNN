@@ -46,7 +46,10 @@ class Gauss_DUQ(nn.Module):
 
         self.in_features = in_features
         self.out_features = out_features
-        self.gamma=gamma
+        self.register_buffer(
+            "gamma", gamma 
+        )
+        #self.gamma=gamma
         self.alpha=alpha
         if N_init==None:
             N_init = torch.ones(out_features)*10
