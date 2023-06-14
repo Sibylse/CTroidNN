@@ -19,9 +19,9 @@ class CE_Loss(nn.Module):
     def prox(self):
         return
         
-class CE_GALoss(nn.Module):
-    def __init__(self, classifier, c, device, delta_min = 0.001, delta_max = 0.9):
-        super(CE_GALoss, self).__init__()
+class CE_CTLoss(nn.Module):
+    def __init__(self, classifier, c, device, delta_min = 0.001, delta_max = 0.999):
+        super(CE_CTLoss, self).__init__()
         self.I = torch.eye(c).to(device)
         self.ce_loss = nn.CrossEntropyLoss()
         self.nll_loss = nn.NLLLoss()
@@ -34,7 +34,7 @@ class CE_GALoss(nn.Module):
         Y = self.I[targets]
         logits = self.classifier(inputs)
         loss = self.ce_loss(Y*logits + self.delta*(1-Y)*logits,targets) 
-        loss+= self.nll_loss(self.delta*logits,targets)
+        loss+= self.nll_loss(logits,targets)
         return loss
     
     def conf(self,inputs):
