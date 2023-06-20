@@ -28,9 +28,10 @@ class Optimizer:
   def train_epoch(self, net, criterion, weight_gp_pred=0, weight_gp_embed=0, adversary=None, verbose=False):
     train_loss, correct, conf = 0, 0, 0
     start_time=time.time()
+    net.train() 
     for batch_idx, (inputs, targets) in enumerate(self.trainloader):
       inputs, targets = inputs.to(self.device), targets.to(self.device)
-      if adversary is not None:
+      if adversary is not None: # not feasible for SNGP because the covariance matrix is computed after each epoch.
         # when performing attack, the model needs to be in eval mode
         # also the parameters should NOT be accumulating gradients
         #with torch.no_grad(): #requires_grad=False & eval()
@@ -40,9 +41,9 @@ class Optimizer:
         inputs = adversary.perturb(inputs, targets)
         net.requires_grad_(True)
         criterion.requires_grad_(True)
+        net.train()
       if weight_gp_pred + weight_gp_embed>0:
         inputs.requires_grad_(True)
-      net.train()
       embedding = net.embed(inputs)
       loss = criterion(embedding,targets)
       if verbose:
