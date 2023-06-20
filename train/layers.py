@@ -83,7 +83,7 @@ class Gauss_DUQ(nn.Module):
         self.m = self.alpha * self.m + (1 - self.alpha) * features_sum
 
 class Gauss_Process(nn.Module): #SNGP final layer
-    __constants__ = ['in_features', 'out_features', 'rff_features']
+    __constants__ = ['in_features', 'out_features']
 
     def __init__(self, in_features, out_features, rff_features=1024, ridge_penalty=1.0, rff_scalar=None, mean_field_factor=25):
         super(Gauss_Process, self).__init__()
@@ -91,6 +91,7 @@ class Gauss_Process(nn.Module): #SNGP final layer
         self.in_features = in_features
         self.out_features = out_features
         self.ridge_penalty=ridge_penalty
+        self.mean_field_factor = mean_field_factor
         
         self.rff = RandomFourierFeatures(in_features, rff_features, rff_scalar)
         self.logit = nn.Linear(rff_features, out_features) #multiply with beta matrix, why is there a bias? Might be a mistake.
