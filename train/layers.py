@@ -85,7 +85,7 @@ class Gauss_DUQ(nn.Module):
 class Gauss_Process(nn.Module): #SNGP final layer
     __constants__ = ['in_features', 'out_features', 'rff_features']
 
-    def __init__(self, in_features, out_features, rff_features, ridge_penalty=1.0, rff_scaler=None, mean_field_factor=None):
+    def __init__(self, in_features, out_features, rff_features=1024, ridge_penalty=1.0, rff_scaler=None, mean_field_factor=25):
         super(Gauss_Process, self).__init__()
 
         self.in_features = in_features
@@ -140,10 +140,10 @@ class Gauss_Process(nn.Module): #SNGP final layer
 class RandomFourierFeatures(nn.Module):
     __constants__ = ['in_features', 'rff_features']
     
-    def __init__(self, in_features, rff_features, feature_scale=None):
+    def __init__(self, in_features, rff_features, rff_scaler=None):
         super().__init__()
-        if feature_scale is None:
-            feature_scale = math.sqrt(rff_features / 2)
+        if rff_scaler is None:
+            rff_scaler = math.sqrt(rff_features / 2)
 
         self.register_buffer("feature_scale", torch.tensor(feature_scale))
 
@@ -170,7 +170,7 @@ class RandomFourierFeatures(nn.Module):
 
     def forward(self, x):
         k = torch.cos(x @ self.W + self.b)
-        k = k / self.feature_scale
+        k = k / self.rff_scaler
         return k
     
     def random_ortho(self,n, m):
