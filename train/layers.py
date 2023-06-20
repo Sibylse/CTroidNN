@@ -4,17 +4,16 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
-class Gauss(nn.Module):
+class Gauss_CTroid(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
     def __init__(self,in_features,out_features, gamma, gamma_min=0.05,gamma_max=1000):
-        super(Gauss, self).__init__()
+        super(Gauss_CTroid, self).__init__()
 
         self.in_features = in_features
         self.out_features = out_features
-        self.gamma=nn.Parameter(gamma*torch.ones(out_features))
-        self.weight = nn.Parameter(torch.Tensor(out_features, in_features)) # (cxd)
-        #nn.init.uniform_(self.weight,a=5/(gamma**2),b=50/(gamma**2))
+        self.gamma=nn.Parameter(gamma*torch.ones(out_features)) #exp(-gamma_k||D_j.^T - C_.k||^2)
+        self.weight = nn.Parameter(torch.Tensor(out_features, in_features)) # (cxd) centroids
         self.gamma_min = gamma_min
         self.gamma_max = gamma_max
 
@@ -27,8 +26,7 @@ class Gauss(nn.Module):
     
     def prox(self):
         torch.clamp_(self.gamma, self.gamma_min, self.gamma_max)
-        
-    
+            
     def get_margins(self):
         #X is dxc, out is cxc matrix, containing the distances ||X_i-X_j||
         # only the upper triangle of out is needed
@@ -83,3 +81,99 @@ class Gauss_DUQ(nn.Module):
         features_sum = torch.einsum("ijk,ik->jk", DW, Y)
 
         self.m = self.alpha * self.m + (1 - self.alpha) * features_sum
+
+class Gauss_Process(nn.Module): #SNGP final layer
+    __constants__ = ['in_features', 'out_features', 'rff_features']
+
+    def __init__(self, in_features, out_features, rff_features, ridge_penalty=1.0, rff_scaler=None, mean_field_factor=None):
+        super(Gauss_Process, self).__init__()
+
+        self.in_features = in_features
+        self.out_features = out_features
+        self.ridge_penalty=ridge_penalty
+        
+        self.rff = RandomFourierFeatures(in_features, rff_features, rff_scaler)
+        self.logit = nn.Linear(rff_features, out_features) #multiply with beta matrix, why is there a bias? Might be a mistake.
+        
+        precision = torch.eye(rff_features) * self.ridge_penalty
+        self.register_buffer("precision", precision)
+        self.register_buffer("covariance", torch.eye(rff_features)) #precision is inverse of covariance
+        
+
+    def forward(self, D):
+        Phi = self.rff(D)
+        pred = self.logit(Phi)
+
+        if self.training:
+            self.precision += Phi.t() @ Phi
+        else: #the covariance has to be updated before by invoking eval()
+            with torch.no_grad():
+                pred_cov = Phi @ ((self.covariance @ Phi.t()) * self.ridge_penalty)
+            if self.mean_field_factor is None:
+                return pred, pred_cov
+            pred = self.mean_field_logits(pred, pred_cov)
+        return pred
+    
+    def conf(self,D):
+        return torch.exp(self.forward(D))
+    
+    def train(self,mode=True):
+        if mode: #training is starting (optimizer calls train() each epoch)
+            identity = torch.eye(self.precision.shape[0], device=self.precision.device)
+            self.precision = identity * self.ridge_penalty
+            print("reset precision matrix")
+        elif self.training: #switch from training to eval mode
+            self.update_covariance()
+            print("updated covariance matrix")
+        return super().train(mode)
+        
+    
+    def update_covariance(self):
+        with torch.no_grad():
+            eps = 1e-7  
+            jitter = eps * torch.eye(self.precision.shape[1],device=self.precision.device)
+            u, info = torch.linalg.cholesky_ex(self.precision + jitter)
+            assert (info == 0).all(), "Precision matrix inversion failed!"
+            torch.cholesky_inverse(u, out=self.covariance)
+        
+
+class RandomFourierFeatures(nn.Module):
+    __constants__ = ['in_features', 'rff_features']
+    
+    def __init__(self, in_features, rff_features, feature_scale=None):
+        super().__init__()
+        if feature_scale is None:
+            feature_scale = math.sqrt(rff_features / 2)
+
+        self.register_buffer("feature_scale", torch.tensor(feature_scale))
+
+        if rff_features <= in_features:
+            W = self.random_ortho(in_features, rff_features)
+        else:
+            # generate blocks of orthonormal rows which are not neccesarily orthonormal
+            # to each other.
+            dim_left = rff_features
+            ws = []
+            while dim_left > in_features:
+                ws.append(self.random_ortho(in_features, in_features))
+                dim_left -= in_features
+            ws.append(self.random_ortho(in_features, dim_left))
+            W = torch.cat(ws, 1)
+
+        # From: https://github.com/google/edward2/blob/d672c93b179bfcc99dd52228492c53d38cf074ba/edward2/tensorflow/initializers.py#L807-L817
+        feature_norm = torch.randn(W.shape) ** 2
+        W = W * feature_norm.sum(0).sqrt()
+        self.register_buffer("W", W)
+
+        b = torch.empty(rff_features).uniform_(0, 2 * math.pi)
+        self.register_buffer("b", b)
+
+    def forward(self, x):
+        k = torch.cos(x @ self.W + self.b)
+        k = k / self.feature_scale
+        return k
+    
+    def random_ortho(self,n, m):
+        q, _ = torch.linalg.qr(torch.randn(n, m))
+        return q
+  
