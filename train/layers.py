@@ -112,8 +112,12 @@ class Gauss_Process(nn.Module): #SNGP final layer
                 pred_cov = Phi @ ((self.covariance @ Phi.t()) * self.ridge_penalty)
             if self.mean_field_factor is None:
                 return pred, pred_cov
-            pred = self.mean_field_logits(pred, pred_cov)
-        return pred
+            # Do mean-field approximation as alternative to MC integration of Gaussian-Softmax
+            # Based on: https://arxiv.org/abs/2006.07584
+            logits_scale = torch.sqrt(1.0 + torch.diag(pred_cov) * self.mean_field_factor)
+            if self.mean_field_factor > 0:
+                pred = pred / logits_scale.unsqueeze(-1)
+            return pred
     
     def conf(self,D):
         return torch.exp(self.forward(D))
