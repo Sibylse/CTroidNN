@@ -117,7 +117,7 @@ class Gauss_Process(nn.Module): #SNGP final layer
             logits_scale = torch.sqrt(1.0 + torch.diag(pred_cov) * self.mean_field_factor)
             if self.mean_field_factor > 0:
                 pred = pred / logits_scale.unsqueeze(-1)
-            return pred
+        return pred
     
     def conf(self,D):
         return torch.exp(self.forward(D))
