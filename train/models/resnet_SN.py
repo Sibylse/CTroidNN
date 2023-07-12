@@ -91,16 +91,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNetEmbed(nn.Module):
-    def __init__(
-        self,
-        block,
-        num_blocks,
-        num_classes=10,
-        spectral_normalization=True,
-        mod=True,
-        coeff=3,
-        n_power_iterations=1
-    ):
+    def __init__(self,block,num_blocks,num_classes=10,spectral_normalization=True,mod=True,coeff=3,n_power_iterations=1):
         """
         If the "mod" parameter is set to True, the architecture uses 2 modifications:
         1. LeakyReLU instead of normal ReLU
