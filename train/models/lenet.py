@@ -43,7 +43,7 @@ class LeNetEmbed(nn.Module):
 #        return out     
     
 class LeNet(nn.Module):
-    def __init__(self,embedding_dim=84, classifier,coeff=0,n_power_iterations=1):
+    def __init__(self,embedding_dim, classifier,coeff=0,n_power_iterations=1):
         super(LeNet, self).__init__()
         #if last_activation is None:
         #    self.embed = LeNetEmbed(embedding_dim=embedding_dim)
