@@ -119,8 +119,8 @@ class Gauss_Process(nn.Module): #SNGP final layer
                 pred = pred / logits_scale.unsqueeze(-1)
         return pred
     
-    def conf(self,D):
-        return torch.exp(self.forward(D))
+    #def conf(self,D):
+    #    return torch.exp(self.forward(D))
     
     def train(self,mode=True):
         if mode: #training is starting (optimizer calls train() each epoch)
