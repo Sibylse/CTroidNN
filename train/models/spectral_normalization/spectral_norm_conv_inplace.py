@@ -119,7 +119,7 @@ class SpectralNormConv(object):
         module.register_parameter(self.name, torch.nn.Parameter(weight.detach()))
 
     def __call__(self, module, inputs):
-        assert inputs[0].shape[1:] == self.input_dim[1:], "Input dims don't match actual input"
+        assert inputs[0].shape[1:] == self.input_dim[1:], "Input dims don't match actual input, input shape is:"+str(inputs[0].shape[1:])
         setattr(
             module, self.name, self.compute_weight(module, do_power_iteration=module.training),
         )
