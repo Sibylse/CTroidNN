@@ -2,6 +2,9 @@
 import torch.nn as nn
 import torch.nn.functional as F
 
+from train.models.spectral_normalization.spectral_norm_conv_inplace import spectral_norm_conv
+from train.models.spectral_normalization.spectral_norm_fc import spectral_norm_fc
+
 # The embedding architecture returns the 
 # output of the penultimate layer
 class LeNetEmbed(nn.Module):
