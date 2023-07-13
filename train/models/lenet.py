@@ -17,7 +17,7 @@ class LeNetEmbed(nn.Module):
         self.fc2   = nn.Linear(120, embedding_dim)
         if coeff >0: #do spectral normalization constraining L<coeff (approximately)
             self.conv1 = spectral_norm_conv(self.conv1, coeff, (1,28,28), n_power_iterations)
-            self.conv2 = spectral_norm_conv(self.conv2, coeff, (6,11,11), n_power_iterations)
+            self.conv2 = spectral_norm_conv(self.conv2, coeff, (6,12,12), n_power_iterations)
             self.fc1 = spectral_norm_fc(self.fc1, coeff, n_power_iterations)
             self.fc2 = spectral_norm_fc(self.fc2, coeff, n_power_iterations)
 
