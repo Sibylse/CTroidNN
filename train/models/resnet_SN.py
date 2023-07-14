@@ -168,7 +168,7 @@ class ResNetSN(nn.Module):
         return out
 
 
-def resnet18(classifier, spectral_normalization=True, mod=True, **kwargs):
+def resnet18(classifier, spectral_normalization=True, mod=False, **kwargs):
     embed = ResNetEmbed(
         BasicBlock,
         [2, 2, 2, 2],
@@ -179,7 +179,7 @@ def resnet18(classifier, spectral_normalization=True, mod=True, **kwargs):
     return ResNetSN(embed,classifier)
 
 
-def resnet50(classifier,spectral_normalization=True, mod=True, **kwargs):
+def resnet50(classifier,spectral_normalization=True, mod=False, **kwargs):
     embed = ResNetEmbed(
         Bottleneck,
         [3, 4, 6, 3],
