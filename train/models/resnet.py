@@ -108,16 +108,19 @@ class ResNetEmbed(nn.Module):
             conv = nn.Conv2d(in_c, out_c, kernel_size, stride, padding, bias=False)
 
             if coeff is None:
+                print("No SN")
                 return conv
 
             # NOTE: Google uses the spectral_norm_fc in all cases
             if kernel_size == 1:
                 # use spectral norm fc, because bound are tight for 1x1 convolutions
                 wrapped_conv = spectral_norm_fc(conv, coeff, n_power_iterations)
+                print("spectral_norm_fc")
             else:
                 # Otherwise use spectral norm conv, with loose bound
                 shapes = (in_c, input_size, input_size)
                 wrapped_conv = spectral_norm_conv(conv, coeff, shapes, n_power_iterations)
+                print("spectral_norm_conv")
 
             return wrapped_conv
 
