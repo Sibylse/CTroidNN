@@ -91,7 +91,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNetEmbed(nn.Module):
-    def __init__(self,block,num_blocks,num_classes=10,spectral_normalization=True,mod=True,coeff=3,n_power_iterations=1):
+    def __init__(self,block,num_blocks,num_classes=10,mod=True,coeff=None,n_power_iterations=1):
         """
         If the "mod" parameter is set to True, the architecture uses 2 modifications:
         1. LeakyReLU instead of normal ReLU
@@ -107,7 +107,7 @@ class ResNetEmbed(nn.Module):
 
             conv = nn.Conv2d(in_c, out_c, kernel_size, stride, padding, bias=False)
 
-            if not spectral_normalization:
+            if coeff is None:
                 return conv
 
             # NOTE: Google uses the spectral_norm_fc in all cases
@@ -168,22 +168,22 @@ class ResNetSN(nn.Module):
         return out
 
 
-def resnet18(classifier, spectral_normalization=False, mod=False, **kwargs):
+def resnet18(classifier, coeff=None, mod=False, **kwargs):
     embed = ResNetEmbed(
         BasicBlock,
         [2, 2, 2, 2],
-        spectral_normalization=spectral_normalization,
+        coeff=coeff,
         mod=mod,
         **kwargs
     )
     return ResNetSN(embed,classifier)
 
 
-def resnet50(classifier,spectral_normalization=False, mod=False, **kwargs):
+def resnet50(classifier,coeff=None, mod=False, **kwargs):
     embed = ResNetEmbed(
         Bottleneck,
         [3, 4, 6, 3],
-        spectral_normalization=spectral_normalization,
+        coeff=coeff,
         mod=mod,
         **kwargs
     )
