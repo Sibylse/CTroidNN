@@ -31,7 +31,7 @@ class CE_CTLoss(nn.Module):
         self.delta_max = delta_max
  
     def forward(self, inputs, targets):        
-        Y = self.I[targets]
+        Y = self.I[targets].float()
         logits = self.classifier(inputs)
         loss = self.ce_loss(Y*logits + self.delta*(1-Y)*logits,targets) 
         loss+= self.nll_loss(logits,targets)
