@@ -56,7 +56,7 @@ class BCE_DUQLoss(nn.Module):
         self.Y= 0
     
     def forward(self, inputs, targets):
-        self.Y = self.I[targets]
+        self.Y = self.I[targets].float()
         self.Y_pred = torch.exp(self.classifier(inputs))
         loss = self.bce_loss(self.Y_pred, self.Y)
         return loss
