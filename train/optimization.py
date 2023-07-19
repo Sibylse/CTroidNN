@@ -69,6 +69,7 @@ class Optimizer:
         if self.update_centroids:
           net.eval()
           criterion.classifier.update_centroids(embedding, criterion.Y)
+          net.train()
         train_loss += loss.item()
         confBatch, predicted = criterion.conf(embedding).max(1)
         correct += predicted.eq(targets).sum().item()
