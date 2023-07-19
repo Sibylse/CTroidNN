@@ -1,5 +1,6 @@
 import torch.nn as nn
 import torch
+import torch.nn.functional as F
 
 class CE_Loss(nn.Module):
     def __init__(self, classifier, c, device):
@@ -49,7 +50,7 @@ class BCE_DUQLoss(nn.Module):
     
     def __init__(self, classifier, c, device):
         super(BCE_DUQLoss, self).__init__()
-        self.bce_loss = nn.BCELoss()
+        #self.bce_loss = nn.BCELoss()
         self.I = torch.eye(c).to(device)
         self.classifier = classifier.to(device)
         self.Y_pred = 0 #predicted class probabilities
@@ -58,7 +59,8 @@ class BCE_DUQLoss(nn.Module):
     def forward(self, inputs, targets):
         self.Y = self.I[targets].float()
         self.Y_pred = torch.exp(self.classifier(inputs))
-        loss = self.bce_loss(self.Y_pred, self.Y)
+        #loss = self.bce_loss(self.Y_pred, self.Y)
+        loss = F.binary_cross_entropy(self.Y_pred, self.Y, reduction="mean")
         return loss
     
     def conf(self,inputs):
