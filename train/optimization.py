@@ -44,19 +44,22 @@ class Optimizer:
         net.train()
       if weight_gp_pred + weight_gp_embed>0:
         inputs.requires_grad_(True)
+      self.optimizer.zero_grad()
       embedding = net.embed(inputs)
       loss = criterion(embedding,targets)
       if verbose:
         print("loss:",loss.item())
       #----- gradient penalty
       if weight_gp_pred > 0:
-        loss += weight_gp_pred * self.gradient_penalty(inputs, criterion.Y_pred)
+        gp = self.gradient_penalty(inputs, criterion.Y_pred)
+        loss += weight_gp_pred * gp
+        if verbose:
+          print("GP:",gp.item())
       if weight_gp_embed>0:
         gp = self.gradient_penalty(inputs, embedding)
         loss+= weight_gp_embed * gp
         if verbose:
           print("GP:",gp.item())
-      self.optimizer.zero_grad()
       loss.backward()
       self.optimizer.step()
       inputs.requires_grad_(False)
