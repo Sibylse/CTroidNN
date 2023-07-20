@@ -39,19 +39,20 @@ class Gauss_CTroid(nn.Module):
 class CTroid(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
-    def __init__(self,in_features,out_features, gamma, gamma_min=0.05,gamma_max=1000):
+    def __init__(self,in_features,out_features,d_view, gamma, gamma_min=0.05,gamma_max=1000):
         super(CTroid, self).__init__()
 
         self.in_features = in_features
         self.out_features = out_features
-        self.gamma=nn.Parameter(gamma*torch.ones(int(in_features/2),out_features)) #exp(-gamma_k||D_j.^T - C_.k||^2)
+        self.gamma=nn.Parameter(gamma*torch.ones(int(in_features/d_view),out_features)) #exp(-gamma_k||D_j.^T - C_.k||^2)
         self.weight = nn.Parameter(torch.Tensor(out_features, in_features)) # (cxd) centroids
+        self.d_view = d_view
         self.gamma_min = gamma_min
         self.gamma_max = gamma_max
 
     def forward(self, D):
         out = D.unsqueeze(2) - self.weight.t().unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
-        out = (out**2).view(-1,int(self.in_features/2),2,self.out_features).sum(2)
+        out = (out**2).view(-1,int(self.in_features/d_view),d_view,self.out_features).sum(2)
         out = (out*self.gamma) # (mxd/2xc)
         return -torch.sum(out,1) # (mxc)
     
