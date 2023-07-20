@@ -47,7 +47,7 @@ class CE_CTLoss(nn.Module):
 
 class CTLoss(nn.Module):
     def __init__(self, classifier, c, device, delta_min = 0.001, delta_max = 0.999):
-        super(CE_CTLoss, self).__init__()
+        super(CTLoss, self).__init__()
         self.I = torch.eye(c).to(device)
         self.ce_loss = nn.CrossEntropyLoss()
         self.nll_loss = nn.NLLLoss()
