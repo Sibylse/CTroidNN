@@ -40,7 +40,7 @@ class CTroid(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
     def __init__(self,in_features,out_features, gamma, gamma_min=0.05,gamma_max=1000):
-        super(Gauss_CTroid, self).__init__()
+        super(CTroid, self).__init__()
 
         self.in_features = in_features
         self.out_features = out_features
