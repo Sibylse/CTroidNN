@@ -53,11 +53,11 @@ class CTroid(nn.Module):
     def forward(self, D):
         out = D.unsqueeze(2) - self.weight.t().unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
         out = (out**2).view(-1,int(self.in_features/d_view),d_view,self.out_features).sum(2)
-        out = (out*self.gamma) # (mxd/2xc)
-        return -torch.sum(out,1) # (mxc)
+        out = (out*self.gamma) # (mxd/d_viewxc)
+        return -out # (mxc)
     
     def conf(self,D):
-        return torch.exp(self.forward(D))
+        return torch.exp(torch.sum(self.forward(D),1))
     
     def prox(self):
         torch.clamp_(self.gamma, self.gamma_min, self.gamma_max)
