@@ -61,8 +61,9 @@ class CTLoss(nn.Module):
         logits_views = self.classifier(inputs) # m x d/d_view x c
         logits_views = Y*logits_views + self.delta*(1-Y)*logits_views
         logits = logits_views.transpose(1,2)
-        loss = self.ce_loss(logits,targets) 
-        loss+= self.nll_loss(logits,targets)
+        targets_rep = targets.repeat(logits.size(2),1).t()
+        loss = self.ce_loss(logits,targets_rep) 
+        loss+= self.nll_loss(logits,targets_rep)
         return loss
     
     def conf(self,inputs):
