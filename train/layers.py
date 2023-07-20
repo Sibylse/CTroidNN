@@ -51,7 +51,7 @@ class CTroid(nn.Module):
 
     def forward(self, D):
         out = D.unsqueeze(2) - self.weight.t().unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
-        out = (out**2).view(-1,2,int(self.in_features/2),self.out_features).sum(1)
+        out = (out**2).view(-1,int(self.in_features/2),2,self.out_features).sum(2)
         out = (out*self.gamma) # (mxd/2xc)
         return -torch.sum(out,1) # (mxc)
     
