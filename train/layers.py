@@ -44,7 +44,7 @@ class CTroid(nn.Module):
 
         self.in_features = in_features
         self.out_features = out_features
-        self.gamma=nn.Parameter(gamma*torch.ones(int(in_features/2)),out_features) #exp(-gamma_k||D_j.^T - C_.k||^2)
+        self.gamma=nn.Parameter(gamma*torch.ones(int(in_features/2),out_features)) #exp(-gamma_k||D_j.^T - C_.k||^2)
         self.weight = nn.Parameter(torch.Tensor(out_features, in_features)) # (cxd) centroids
         self.gamma_min = gamma_min
         self.gamma_max = gamma_max
