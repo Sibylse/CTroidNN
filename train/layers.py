@@ -35,6 +35,40 @@ class Gauss_CTroid(nn.Module):
         out= torch.sqrt(torch.sum((out**2),1))
         triu_idx = torch.triu_indices(out.shape[0], out.shape[0],1)
         return out[triu_idx[0],triu_idx[1]]
+
+class CTroid(nn.Module):
+    __constants__ = ['in_features', 'out_features']
+
+    def __init__(self,in_features,out_features, gamma, gamma_min=0.05,gamma_max=1000):
+        super(Gauss_CTroid, self).__init__()
+
+        self.in_features = in_features
+        self.out_features = out_features
+        self.gamma=nn.Parameter(gamma*torch.ones(int(in_features/2)),out_features) #exp(-gamma_k||D_j.^T - C_.k||^2)
+        self.weight = nn.Parameter(torch.Tensor(out_features, in_features)) # (cxd) centroids
+        self.gamma_min = gamma_min
+        self.gamma_max = gamma_max
+
+    def forward(self, D):
+        out = D.unsqueeze(2) - self.weight.t().unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
+        out = (out**2).view(-1,2,int(self.in_features/2),self.out_features).sum(1)
+        out = (out*self.gamma) # (mxd/2xc)
+        return -torch.sum(out,1) # (mxc)
+    
+    def conf(self,D):
+        return torch.exp(self.forward(D))
+    
+    def prox(self):
+        torch.clamp_(self.gamma, self.gamma_min, self.gamma_max)
+            
+    def get_margins(self):
+        #X is dxc, out is cxc matrix, containing the distances ||X_i-X_j||
+        # only the upper triangle of out is needed
+        X = self.weight.data.t()
+        out = X.t().unsqueeze(2) - X.unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
+        out= torch.sqrt(torch.sum((out**2),1))
+        triu_idx = torch.triu_indices(out.shape[0], out.shape[0],1)
+        return out[triu_idx[0],triu_idx[1]]
     
 class Gauss_DUQ(nn.Module):
     __constants__ = ['in_features', 'out_features']
