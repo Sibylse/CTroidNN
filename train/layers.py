@@ -218,3 +218,51 @@ class RandomFourierFeatures(nn.Module):
         q, _ = torch.linalg.qr(torch.randn(n, m))
         return q
   
+# Gaussian Mixture Model Layer as proposed for the DDU model
+class GMM_DDU(nn.Module):
+    __constants__ = ['in_features', 'out_features']
+
+    def __init__(self,in_features,out_features):
+        super(GMM_DDU, self).__init__()
+
+        self.in_features = in_features
+        self.out_features = out_features
+        self.register_buffer('classwise_mean_features', torch.zeros(out_features, in_features))
+        self.register_buffer('classwise_cov_features', torch.eye(in_features).unsqueeze(0).repeat(out_features, 1, 1))
+        self.gda = self.init_gda()  # class-wise multivatiate Gaussians, to be initialized with fit()
+    
+    def forward(self, D):
+        return self.gda.log_prob(D[:, None, :])
+    
+    def conf(self,D):
+        return torch.exp(self.forward(D))
+    
+    def prox(self):
+        return
+    
+    def fit(self, embeddings, labels): #embeddings should be num_samples x dim_embedding
+        with torch.no_grad():
+            classwise_mean_features = torch.stack([torch.mean(embeddings[labels == c], dim=0) for c in range(self.out_features)])
+            classwise_cov_features = torch.stack(
+                [torch.cov(embeddings[labels == c].T) for c in range(self.out_features)])
+            gmm=None
+
+            for jitter_eps in [0, torch.finfo(torch.double).tiny] + [10 ** exp for exp in range(-308, 0, 1)]:
+                try:
+                    jitter = jitter_eps * torch.eye(
+                        classwise_cov_features.shape[1], device=classwise_cov_features.device,
+                    ).unsqueeze(0)
+                    gmm = torch.distributions.MultivariateNormal(
+                        loc=classwise_mean_features, covariance_matrix=(classwise_cov_features + jitter),
+                    )
+                except RuntimeError as e:
+                    continue
+                except ValueError as e:
+                    continue
+                break
+            self.classwise_mean_features = classwise_mean_features
+            self.classwise_cov_features = classwise_cov_features + jitter
+        self.gda = gmm 
+    
+    def init_gda(self):
+        self.gda = torch.distributions.MultivariateNormal(loc=self.classwise_mean_features, covariance_matrix=(self.classwise_cov_features))
