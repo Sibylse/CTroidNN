@@ -223,7 +223,7 @@ class Gauss_DDU(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
     def __init__(self,in_features,out_features):
-        super(GMM_DDU, self).__init__()
+        super(Gauss_DDU, self).__init__()
 
         self.in_features = in_features
         self.out_features = out_features
