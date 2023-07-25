@@ -218,8 +218,8 @@ class RandomFourierFeatures(nn.Module):
         q, _ = torch.linalg.qr(torch.randn(n, m))
         return q
   
-# Gaussian Mixture Model Layer as proposed for the DDU model
-class GMM_DDU(nn.Module):
+# Gaussian Multivariate Layer as proposed for the DDU model
+class Gauss_DDU(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
     def __init__(self,in_features,out_features):
