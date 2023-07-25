@@ -235,7 +235,7 @@ class Gauss_DDU(nn.Module):
     
     def forward(self, D):
         L  = self.gda._unbroadcasted_scale_tril
-        return -self.gamma* self.mahalanobis(L, D[:, None, :]-self.gda.loc)
+        return -self.gamma* self.mahalanobis(L, D[:, None, :]-self.gda.loc).float()
     
     def get_log_probs(D):    
         return self.gda.log_prob(D[:, None, :]).float()
