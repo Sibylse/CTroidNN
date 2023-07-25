@@ -232,7 +232,7 @@ class Gauss_DDU(nn.Module):
         self.gda = self.init_gda()  # class-wise multivatiate Gaussians, to be initialized with fit()
     
     def forward(self, D):
-        return self.gda.log_prob(D[:, None, :])
+        return self.gda.log_prob(D[:, None, :]).float()
     
     def conf(self,D):
         return torch.exp(self.forward(D))
