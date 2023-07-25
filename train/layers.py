@@ -222,7 +222,7 @@ class RandomFourierFeatures(nn.Module):
 class Gauss_DDU(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
-    def __init__(self,in_features,out_features):
+    def __init__(self,in_features,out_features, gamma =5e-3):
         super(Gauss_DDU, self).__init__()
 
         self.in_features = in_features
@@ -231,10 +231,11 @@ class Gauss_DDU(nn.Module):
         self.register_buffer('classwise_cov_features', torch.eye(in_features).unsqueeze(0).repeat(out_features, 1, 1))
         self.gda = self.init_gda()  # class-wise multivatiate Gaussians, to be initialized with fit()
         self.mahalanobis = torch.distributions.multivariate_normal._batch_mahalanobis
+        self.gamma = gamma
     
     def forward(self, D):
         L  = self.gda._unbroadcasted_scale_tril
-        return self.mahalanobis(L, D[:, None, :]-self.gda.loc)
+        return -self.gamma* self.mahalanobis(L, D[:, None, :]-self.gda.loc)
     
     def get_log_probs(D):    
         return self.gda.log_prob(D[:, None, :]).float()
