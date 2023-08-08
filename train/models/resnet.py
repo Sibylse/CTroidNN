@@ -156,9 +156,9 @@ class ResNetEmbed(nn.Module):
         #out = self.fc(out) / self.temp
         return out
     
-class ResNetSN(nn.Module):
+class ResNet(nn.Module):
     def __init__(self, embedding, classifier):
-        super(ResNetSN, self).__init__()
+        super(ResNet, self).__init__()
         self.embed = embedding
         self.classifier = classifier
 
@@ -176,7 +176,7 @@ def resnet18(classifier, coeff=None, mod=False, **kwargs):
         mod=mod,
         **kwargs
     )
-    return ResNetSN(embed,classifier)
+    return ResNet(embed,classifier)
 
 
 def resnet50(classifier,coeff=None, mod=False, **kwargs):
@@ -187,4 +187,4 @@ def resnet50(classifier,coeff=None, mod=False, **kwargs):
         mod=mod,
         **kwargs
     )
-    return ResNetSN(embed,classifier)
+    return ResNet(embed,classifier)
