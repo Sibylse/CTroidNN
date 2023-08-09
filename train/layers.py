@@ -29,7 +29,7 @@ class CTroid(nn.Module):
     def conf(self,D):
         return torch.exp(torch.sum(self.forward(D),1))
 
-    def conf_view(D,i):
+    def conf_view(self, D,i):
         """
         For plotting purposes - returns a two-dimensional view (dimensions i and i+1) of the confidences assigned to the points in D (m x 2)
         """
