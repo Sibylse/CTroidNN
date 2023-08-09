@@ -95,14 +95,14 @@ class BCE_DUQLoss(nn.Module):
         return loss
 
     def loss(self, inputs, targets, net):
-        if self.weight_gp >0:
+        if self.weight_gp >0 and net.training:
             inputs.requires_grad_(True)
         self.Y = self.I[targets].float()
         self.embedding = net.embed(inputs)
         logs = net.classifier(self.embedding)
         Y_pred = torch.exp(logs)
         loss = F.binary_cross_entropy(Y_pred, self.Y, reduction="mean")
-        if self.weight_gp > 0:
+        if self.weight_gp > 0 and net.training:
             gp = gradient_penalty(inputs, Y_pred)
             loss += self.weight_gp * gp
         return loss, Y_pred
