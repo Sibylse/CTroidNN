@@ -85,7 +85,7 @@ class Optimizer:
         for batch_idx, (inputs, targets) in enumerate(data_loader):
             inputs, targets = inputs.to(self.device), targets.to(self.device)
             #outputs = net.embed(inputs)
-            loss,Y_pred = criterion.loss(inputs, outputs, targets)
+            loss,Y_pred = criterion.loss(inputs, targets, net)
 
             test_loss += loss.item()
             confBatch, predicted = Y_pred.max(1)
