@@ -25,7 +25,7 @@ class Optimizer:
     gradient_penalty = ((grad_norm - 1) ** 2).mean()
     return gradient_penalty
 
-  def train_epoch(self, net, criterion, weight_gp_pred=0, weight_gp_embed=0, adversary=None, verbose=False):
+  def train_epoch(self, net, criterion, adversary=None, verbose=False):
     train_loss, correct, conf = 0, 0, 0
     start_time=time.time()
     net.train() 
@@ -42,36 +42,36 @@ class Optimizer:
         net.requires_grad_(True)
         criterion.requires_grad_(True)
         net.train()
-      if weight_gp_pred + weight_gp_embed>0:
-        inputs.requires_grad_(True)
+      #if weight_gp_pred + weight_gp_embed>0:
+      #  inputs.requires_grad_(True)
       self.optimizer.zero_grad()
-      embedding = net.embed(inputs)
-      loss = criterion(embedding,targets)
+      #embedding = net.embed(inputs)
+      loss, Y_pred = criterion.loss(inputs,targets, net)
       if verbose:
         print("loss:",loss.item())
       #----- gradient penalty
-      if weight_gp_pred > 0:
-        gp = self.gradient_penalty(inputs, criterion.Y_pred)
-        loss += weight_gp_pred * gp
-        if verbose:
-          print("GP:",gp.item())
-      if weight_gp_embed>0:
-        gp = self.gradient_penalty(inputs, embedding)
-        loss+= weight_gp_embed * gp
-        if verbose:
-          print("GP:",gp.item())
+      #if weight_gp_pred > 0:
+      #  gp = self.gradient_penalty(inputs, criterion.Y_pred)
+      #  loss += weight_gp_pred * gp
+      #  if verbose:
+      #    print("GP:",gp.item())
+      #if weight_gp_embed>0:
+      #  gp = self.gradient_penalty(inputs, embedding)
+      #  loss+= weight_gp_embed * gp
+      #  if verbose:
+      #    print("GP:",gp.item())
       loss.backward()
       self.optimizer.step()
       inputs.requires_grad_(False)
 
       with torch.no_grad():
         criterion.prox()
-        if self.update_centroids:
-          net.eval()
-          criterion.classifier.update_centroids(embedding, criterion.Y)
-          net.train()
+        #if self.update_centroids:
+        #  net.eval()
+        #  criterion.classifier.update_centroids(embedding, criterion.Y)
+        #  net.train()
         train_loss += loss.item()
-        confBatch, predicted = criterion.conf(embedding).max(1)
+        confBatch, predicted = Y_pred.max(1)
         correct += predicted.eq(targets).sum().item()
         conf+=confBatch.sum().item()
     execution_time = (time.time() - start_time)
@@ -84,11 +84,11 @@ class Optimizer:
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(data_loader):
             inputs, targets = inputs.to(self.device), targets.to(self.device)
-            outputs = net.embed(inputs)
-            loss = criterion(outputs, targets)
+            #outputs = net.embed(inputs)
+            loss,Y_pred = criterion.loss(inputs, outputs, targets)
 
             test_loss += loss.item()
-            confBatch, predicted = criterion.conf(outputs).max(1)
+            confBatch, predicted = Y_pred.max(1)
             idx = (confBatch>min_conf)
             correct += predicted[idx].eq(targets[idx]).sum().item()
             conf+=confBatch[idx].sum().item()
@@ -113,19 +113,3 @@ class Optimizer:
     print('Gradient Penalty: %.3f'% (gp/max(len(data_loader),1)))
     return gp
   
-  # Compute the class centroids in the penultimate layer 
-  # and set the centroids as the weights for the classifier.
-  def optimize_centroids(self, net):
-    net.eval()
-    d,c = net.classifier.in_features,net.classifier.out_features
-    Z=torch.zeros(d,c).to(self.device)
-    y_sum = torch.zeros(c).to(self.device)
-    with torch.no_grad():
-        for batch_idx, (inputs, targets) in enumerate(self.trainloader):
-            inputs, targets = inputs.to(self.device), targets.to(self.device)
-            D = net.embed(inputs)
-            Y = F.one_hot(targets, c).float().to(self.device)
-            Z += D.t().mm(Y)
-            y_sum += torch.sum(Y,0)
-    Z = Z/y_sum
-    net.classifier.weight.data = Z.t()
