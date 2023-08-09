@@ -3,7 +3,7 @@ import torch
 import torch.nn.functional as F
 
 
-def gradient_penalty(self, inputs, outputs):
+def gradient_penalty(inputs, outputs):
     gradients = torch.autograd.grad(
             outputs=outputs,
             inputs=inputs,
