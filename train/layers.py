@@ -28,6 +28,13 @@ class CTroid(nn.Module):
     
     def conf(self,D):
         return torch.exp(torch.sum(self.forward(D),1))
+
+    def conf_view(D,i):
+        """
+        For plotting purposes - returns a two-dimensional view (dimensions i and i+1) of the confidences assigned to the points in D (m x 2)
+        """
+        out = D.unsqueeze(2) - self.weight.t()[[i,i+1],:].unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc
+        return torch.exp(-self.gamma*torch.sum((out**2),1)) # (mxc)
     
     def prox(self):
         torch.clamp_(self.gamma, self.gamma_min, self.gamma_max)
