@@ -77,7 +77,7 @@ class CTLoss(nn.Module):
 
 class BCE_DUQLoss(nn.Module):
     
-    def __init__(self, c, device, weight_gp):
+    def __init__(self, c, device, weight_gp=0):
         super(BCE_DUQLoss, self).__init__()
         #self.bce_loss = nn.BCELoss()
         self.I = torch.eye(c).to(device)
