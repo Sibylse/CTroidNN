@@ -8,14 +8,14 @@ from train.models.spectral_normalization.spectral_norm_fc import spectral_norm_f
 # The embedding architecture returns the 
 # output of the penultimate layer
 class LeNetEmbed(nn.Module):
-    def __init__(self,embedding_dim=84,coeff=0,n_power_iterations=1):
+    def __init__(self,embedding_dim=84,coeff=None,n_power_iterations=1):
         super(LeNetEmbed, self).__init__()
         
         self.conv1 = nn.Conv2d(1, 6, 5)
         self.conv2 = nn.Conv2d(6, 16, 5)
         self.fc1   = nn.Linear(16*4*4, 120)
         self.fc2   = nn.Linear(120, embedding_dim)
-        if coeff >0: #do spectral normalization constraining L<coeff (approximately)
+        if coeff is not None: #do spectral normalization constraining L<coeff (approximately)
             self.conv1 = spectral_norm_conv(self.conv1, coeff, (1,28,28), n_power_iterations)
             self.conv2 = spectral_norm_conv(self.conv2, coeff, (6,12,12), n_power_iterations)
             self.fc1 = spectral_norm_fc(self.fc1, coeff, n_power_iterations)
