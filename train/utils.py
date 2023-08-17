@@ -34,4 +34,10 @@ def plot_epoch(net, data_loader, device, conf_view=None):
               plt.title("dim %i, %i"%(2*i,2*i+1))
             plt.scatter(outputs[:, 2*i], outputs[:, 2*i+1], c=targets.cpu(), s=20, alpha=0.5, cmap="gist_rainbow")
         plt.show()
-
+        
+def load_net(name,architecture, path = "checkpoint/"):
+    checkpoint = torch.load(path+name,map_location='cpu')
+    architecture.load_state_dict(checkpoint['net'])
+    architecture.eval()
+    print(name+' ACC:\t',checkpoint['acc'])
+    return architecture
