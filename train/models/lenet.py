@@ -45,10 +45,6 @@ class LeNetEmbed(nn.Module):
 class LeNet(nn.Module):
     def __init__(self,embedding_dim, classifier,coeff=0,n_power_iterations=1):
         super(LeNet, self).__init__()
-        #if last_activation is None:
-        #    self.embed = LeNetEmbed(embedding_dim=embedding_dim)
-        #else:
-        #    self.embed = LeNetEmbedActiv(LeNetEmbed(embedding_dim=embedding_dim), last_activation)
         self.embed = LeNetEmbed(embedding_dim=embedding_dim, coeff=coeff, n_power_iterations=n_power_iterations)
         self.classifier = classifier
 
@@ -56,3 +52,9 @@ class LeNet(nn.Module):
         out = self.embed(x)
         out = self.classifier(out)
         return out
+
+    def conf(self,x):
+        out = self.embed(x)
+        if hasattr(self.classifier,'conf'):
+            return self.classifier.conf(out)
+        return F.softmax(self.classifier(out),dim=1)
