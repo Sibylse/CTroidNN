@@ -27,7 +27,10 @@ class CTroid(nn.Module):
         return -out # (mxc)
     
     def conf(self,D):
-        return torch.exp(torch.sum(self.forward(D),1))
+        return self.conf_logits(self.forward(D))
+
+    def conf_logits(self,logits):
+        return torch.exp(torch.sum(logits,1))
 
     def conf_view(self, D,i):
         """
@@ -78,10 +81,12 @@ class Gauss_DUQ(nn.Module):
         Z = self.m / self.N.unsqueeze(0) # centroids (dxc)
         out = DW - Z.unsqueeze(0)
         return -self.gamma*torch.mean((out**2),1) # (mxc)
-    
 
     def conf(self,D):
-        return torch.exp(self.forward(D))
+        return self.conf_logits(self.forward(D))
+
+    def conf_logits(self,logits):
+        return torch.exp(logits)
     
     def update_centroids(self, D, Y):
         DW = torch.einsum("ij,mnj->imn", D, self.W) # (mxdxc)
@@ -130,9 +135,12 @@ class Gauss_Process(nn.Module): #SNGP final layer
             if self.mean_field_factor > 0:
                 pred = pred / logits_scale.unsqueeze(-1)
         return pred
-    
-    #def conf(self,D):
-    #    return torch.exp(self.forward(D))
+
+    def conf(self,D):
+        return self.conf_logits(self.forward(D))
+
+    def conf_logits(self,logits):
+        return F.softmax(logits,dim=1))
     
     def train(self,mode=True):
         if mode: #training is starting (optimizer calls train() each epoch)
@@ -194,11 +202,11 @@ class RandomFourierFeatures(nn.Module):
         q, _ = torch.linalg.qr(torch.randn(n, m))
         return q
   
-# Gaussian Multivariate Layer as proposed for the DDU model
+# Gaussian Multivariate Layer for epistemic and aleatoric uncertainty as proposed for the DDU model
 class Gauss_DDU(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
-    def __init__(self,in_features,out_features, gamma =5e-3):
+    def __init__(self,in_features,out_features, linear_classifier, gamma =5e-3):
         super(Gauss_DDU, self).__init__()
 
         self.in_features = in_features
@@ -208,6 +216,7 @@ class Gauss_DDU(nn.Module):
         self.gda = self.init_gda()  # class-wise multivatiate Gaussians, to be initialized with fit()
         self.mahalanobis = torch.distributions.multivariate_normal._batch_mahalanobis
         self.gamma = gamma
+        self.linear_classifier = None
     
     def forward(self, D):
         L  = self.gda._unbroadcasted_scale_tril
@@ -215,9 +224,12 @@ class Gauss_DDU(nn.Module):
     
     def get_log_probs(self,D):    
         return self.gda.log_prob(D[:, None, :]).float()
-    
+
     def conf(self,D):
-        return torch.exp(self.forward(D))
+        return self.conf_logits(self.forward(D))
+
+    def conf_logits(self,logits):
+        return F.softmax(logits,dim=1))
     
     def prox(self):
         return
