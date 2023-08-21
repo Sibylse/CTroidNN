@@ -229,7 +229,7 @@ class Gauss_DDU(nn.Module):
         return self.conf_logits(self.forward(D))
 
     def conf_logits(self,logits):
-        return F.softmax(logits,dim=1))
+        return F.softmax(logits,dim=1)
     
     def prox(self):
         return
