@@ -41,3 +41,22 @@ def load_net(name,architecture, path = "checkpoint/"):
     architecture.eval()
     print(name+' ACC:\t',checkpoint['acc'])
     return architecture
+
+#get the embeddings for all data points
+def gather_embeddings(net, d, loader: torch.utils.data.DataLoader, device, storage_device):
+    num_samples = len(loader.dataset)
+    output = torch.empty((num_samples, d), dtype=torch.double, device=storage_device)
+    labels = torch.empty(num_samples, dtype=torch.int, device=storage_device)
+
+    with torch.no_grad():
+        start = 0
+        for batch_idx, (data, label) in enumerate(loader):
+            data, label = data.to(device), label.to(device)
+            out = net.embed(data)
+
+            end = start + len(data)
+            output[start:end].copy_(out, non_blocking=True)
+            labels[start:end].copy_(label, non_blocking=True)
+            start = end
+
+    return output, labels
