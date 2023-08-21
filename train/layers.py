@@ -140,7 +140,7 @@ class Gauss_Process(nn.Module): #SNGP final layer
         return self.conf_logits(self.forward(D))
 
     def conf_logits(self,logits):
-        return F.softmax(logits,dim=1))
+        return F.softmax(logits,dim=1)
     
     def train(self,mode=True):
         if mode: #training is starting (optimizer calls train() each epoch)
