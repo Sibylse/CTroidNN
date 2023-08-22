@@ -260,3 +260,13 @@ class Gauss_DDU(nn.Module):
     
     def init_gda(self):
         self.gda = torch.distributions.MultivariateNormal(loc=self.classwise_mean_features, covariance_matrix=(self.classwise_cov_features))
+
+# simple Module to normalize an image
+class Normalize(nn.Module):
+    def __init__(self, mean, std):
+        super(Normalize, self).__init__()
+        self.mean = torch.tensor(mean)
+        self.std = torch.tensor(std)
+    def forward(self, x):
+        return (x - self.mean.type_as(x)[None, :, None, None]) / self.std.type_as(x)[None, :, None, None]
+
