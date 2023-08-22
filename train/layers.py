@@ -215,11 +215,12 @@ class Gauss_DDU(nn.Module):
         self.register_buffer('classwise_cov_features', torch.eye(in_features).unsqueeze(0).repeat(out_features, 1, 1))
         self.gda = self.init_gda()  # class-wise multivatiate Gaussians, to be initialized with fit()
         self.mahalanobis = torch.distributions.multivariate_normal._batch_mahalanobis
-        self.gamma = gamma
+        self.gamma=nn.Parameter(gamma*torch.ones(out_features))
+        #self.gamma = gamma
     
     def forward(self, D):
         L  = self.gda._unbroadcasted_scale_tril
-        return -self.gamma* self.mahalanobis(L, D[:, None, :]-self.gda.loc).float()
+        return -self.gamma * self.mahalanobis(L, D[:, None, :]-self.gda.loc).float()
     
     def get_log_probs(self,D):    
         return self.gda.log_prob(D[:, None, :]).float()
