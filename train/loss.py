@@ -31,8 +31,13 @@ class CE_Loss(nn.Module):
 
     def loss(self, inputs, targets, net):
         logits = net(inputs)
-        return self.ce_loss(logits, targets), self.softmax(logits)
-    
+        return self.ce_loss(logits, targets), self.conf_logits(logits)
+
+    def conf_logits(self,logits, net):
+        if hasattr(net.classifier,'conf_logits'):
+            return net.classifier.conf_logits(logits)
+        return self.softmax(logits)
+        
     def conf(self, inputs, net):
         logits = net(inputs)
         return self.softmax(logits)
