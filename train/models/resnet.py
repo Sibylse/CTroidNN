@@ -167,6 +167,12 @@ class ResNet(nn.Module):
         out = self.classifier(out)
         return out
 
+    def conf(self,x):
+        out = self.embed(x)
+        if hasattr(self.classifier,'conf'):
+            return self.classifier.conf(out)
+        return F.softmax(self.classifier(out),dim=1)
+
 
 def resnet18(classifier, coeff=None, mod=False, **kwargs):
     embed = ResNetEmbed(
