@@ -41,11 +41,12 @@ class CE_Loss(nn.Module):
         return
 
 class CTLoss(nn.Module):
-    def __init__(self, c, device):
+    def __init__(self, c, device, weight_nll=1):
         super(CTLoss, self).__init__()
         #self.I = torch.eye(c).to(device)
         self.ce_loss = nn.CrossEntropyLoss()
         self.nll_loss = nn.NLLLoss()
+        self.weight_nll = weight_nll
         #self.classifier = classifier.to(device)
  
     def forward(self, logits_views, targets):        
@@ -55,7 +56,7 @@ class CTLoss(nn.Module):
         logits = logits_views.transpose(1,2)
         targets_rep = targets.repeat(logits.size(2),1).t()
         loss = self.ce_loss(logits,targets_rep) 
-        loss+= self.nll_loss(logits,targets_rep)
+        loss+= self.weight_nll * self.nll_loss(logits,targets_rep)
         return loss
 
     def loss(self, inputs, targets, net):
