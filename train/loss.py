@@ -31,7 +31,7 @@ class CE_Loss(nn.Module):
 
     def loss(self, inputs, targets, net):
         logits = net(inputs)
-        return self.ce_loss(logits, targets), self.conf_logits(logits)
+        return self.ce_loss(logits, targets), self.conf_logits(logits,net)
 
     def conf_logits(self,logits, net):
         if hasattr(net.classifier,'conf_logits'):
