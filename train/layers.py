@@ -240,7 +240,7 @@ class Gauss_DDU(nn.Module):
             classwise_cov_features = torch.stack(
                 [torch.cov(embeddings[labels == c].T) for c in range(self.out_features)])
 
-            for jitter_eps in [0, torch.finfo(torch.float).tiny] + [10 ** exp for exp in range(-308, 0, 1)]:
+            for jitter_eps in [0, torch.finfo(torch.float).tiny] + [10 ** exp for exp in range(-308, 0, 2)]:
                 try:
                     jitter = jitter_eps * torch.eye(
                         classwise_cov_features.shape[1], device=classwise_cov_features.device,
