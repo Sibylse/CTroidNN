@@ -239,24 +239,20 @@ class Gauss_DDU(nn.Module):
             classwise_mean_features = torch.stack([torch.mean(embeddings[labels == c], dim=0) for c in range(self.out_features)])
             classwise_cov_features = torch.stack(
                 [torch.cov(embeddings[labels == c].T) for c in range(self.out_features)])
-            mvn=None
 
             for jitter_eps in [0, torch.finfo(torch.float).tiny] + [10 ** exp for exp in range(-308, 0, 1)]:
                 try:
                     jitter = jitter_eps * torch.eye(
                         classwise_cov_features.shape[1], device=classwise_cov_features.device,
                     ).unsqueeze(0)
-                    mvn = torch.distributions.MultivariateNormal(
-                        loc=classwise_mean_features, covariance_matrix=(classwise_cov_features + jitter),
-                    )
+                    self.classwise_mean_features = classwise_mean_features
+                    self.classwise_cov_features = classwise_cov_features + jitter
+                    self.init_gda()
                 except RuntimeError as e:
                     continue
                 except ValueError as e:
                     continue
                 break
-                self.classwise_mean_features = classwise_mean_features
-                self.classwise_cov_features = classwise_cov_features + jitter
-        self.gda = mvn 
     
     def init_gda(self):
         self.gda = torch.distributions.MultivariateNormal(loc=self.classwise_mean_features, covariance_matrix=(self.classwise_cov_features))
