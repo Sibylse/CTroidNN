@@ -254,8 +254,8 @@ class Gauss_DDU(nn.Module):
                 except ValueError as e:
                     continue
                 break
-            self.classwise_mean_features = classwise_mean_features
-            self.classwise_cov_features = classwise_cov_features + jitter
+                self.classwise_mean_features = classwise_mean_features
+                self.classwise_cov_features = classwise_cov_features + jitter
         self.gda = mvn 
     
     def init_gda(self):
