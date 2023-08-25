@@ -64,8 +64,8 @@ class CTLoss(nn.Module):
             loss = self.ce_loss(logits,targets_rep) 
             loss+= self.weight_nll * self.nll_loss(logits,targets_rep)
         else:
-            loss = self.ce_loss(logits,targets) 
-            loss+= self.weight_nll * self.nll_loss(logits,targets)
+            loss = self.ce_loss(logits_views,targets) 
+            loss+= self.weight_nll * self.nll_loss(logits_views,targets)
         return loss
 
     def loss(self, inputs, targets, net):
@@ -74,7 +74,11 @@ class CTLoss(nn.Module):
         #targets_rep = targets.repeat(logits.size(2),1).t()
         #loss = self.ce_loss(logits,targets_rep) 
         #loss+= self.nll_loss(logits,targets_rep)
-        return self.forward(logits_views, targets), net.classifier.conf(logits_views)
+        if len(logits_views.shape)==3:
+            y_pred = torch.exp(torch.sum(logits_views,1))
+        else:
+            y_pred = torch.exp(logits_views)
+        return self.forward(logits_views, targets), y_pred
     
     def conf(self, inputs, net):
         logits_views = net(inputs)
