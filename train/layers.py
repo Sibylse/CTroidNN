@@ -25,7 +25,7 @@ class CTroid(nn.Module):
         out = (out**2) #mxdxc
         if self.d_view is not None:
             out = out.view(-1,int(self.in_features/self.d_view),self.d_view,self.out_features).sum(2)
-        else 
+        else :
             out = out.sum(1)
         out = (out*self.gamma) # (mxd/d_viewxc) or (mxc)
         return -out # # (mxd/d_viewxc) or (mxc)
