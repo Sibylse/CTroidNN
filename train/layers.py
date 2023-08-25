@@ -8,7 +8,7 @@ import math
 class CTroid(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
-    def __init__(self,in_features,out_features,d_view=None, gamma, gamma_min=0.05,gamma_max=1000):
+    def __init__(self,in_features,out_features,d_view=None, gamma=0.5, gamma_min=0.05,gamma_max=1000):
         super(CTroid, self).__init__()
 
         self.in_features = in_features
