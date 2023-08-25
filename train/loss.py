@@ -58,7 +58,7 @@ class CTLoss(nn.Module):
         #Y = self.I[targets].float().unsqueeze(1) #m x c
     #    logits_views = self.classifier(inputs) # m x d/d_view x c
         #logits_views = Y*logits_views + self.delta*(1-Y)*logits_views
-        if net.classifier.d_view is not None:
+        if len(logits_views.shape)==3:
             logits = logits_views.transpose(1,2)
             targets_rep = targets.repeat(logits.size(2),1).t()
             loss = self.ce_loss(logits,targets_rep) 
