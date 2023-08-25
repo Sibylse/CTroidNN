@@ -8,7 +8,7 @@ import math
 class CTroid(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
-    def __init__(self,in_features,out_features,d_view, gamma, gamma_min=0.05,gamma_max=1000):
+    def __init__(self,in_features,out_features,d_view=None, gamma, gamma_min=0.05,gamma_max=1000):
         super(CTroid, self).__init__()
 
         self.in_features = in_features
@@ -22,9 +22,13 @@ class CTroid(nn.Module):
 
     def forward(self, D):
         out = D.unsqueeze(2) - self.weight.t().unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
-        out = (out**2).view(-1,int(self.in_features/self.d_view),self.d_view,self.out_features).sum(2)
-        out = (out*self.gamma) # (mxd/d_viewxc)
-        return -out # (mxc)
+        out = (out**2) #mxdxc
+        if self.d_view is not None:
+            out = out.view(-1,int(self.in_features/self.d_view),self.d_view,self.out_features).sum(2)
+        else 
+            out = out.sum(1)
+        out = (out*self.gamma) # (mxd/d_viewxc) or (mxc)
+        return -out # # (mxd/d_viewxc) or (mxc)
     
     def conf(self,D):
         return self.conf_logits(self.forward(D))
