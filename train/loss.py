@@ -58,10 +58,14 @@ class CTLoss(nn.Module):
         #Y = self.I[targets].float().unsqueeze(1) #m x c
     #    logits_views = self.classifier(inputs) # m x d/d_view x c
         #logits_views = Y*logits_views + self.delta*(1-Y)*logits_views
-        logits = logits_views.transpose(1,2)
-        targets_rep = targets.repeat(logits.size(2),1).t()
-        loss = self.ce_loss(logits,targets_rep) 
-        loss+= self.weight_nll * self.nll_loss(logits,targets_rep)
+        if net.classifier.d_view is not None:
+            logits = logits_views.transpose(1,2)
+            targets_rep = targets.repeat(logits.size(2),1).t()
+            loss = self.ce_loss(logits,targets_rep) 
+            loss+= self.weight_nll * self.nll_loss(logits,targets_rep)
+        else:
+            loss = self.ce_loss(logits,targets) 
+            loss+= self.weight_nll * self.nll_loss(logits,targets)
         return loss
 
     def loss(self, inputs, targets, net):
@@ -70,7 +74,7 @@ class CTLoss(nn.Module):
         #targets_rep = targets.repeat(logits.size(2),1).t()
         #loss = self.ce_loss(logits,targets_rep) 
         #loss+= self.nll_loss(logits,targets_rep)
-        return self.forward(logits_views, targets), torch.exp(torch.sum(logits_views,1))
+        return self.forward(logits_views, targets), net.classifier.conf(logits_views)
     
     def conf(self, inputs, net):
         logits_views = net(inputs)
