@@ -4,7 +4,73 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math
 
+class Centroid_Squared_Distances(nn.Module):
+    def __init__(self,in_features,out_features):
+        super(Centroid_Squared_Distances, self).__init__()
+        self.weight = nn.Parameter(torch.Tensor(out_features, in_features)) # (cxd) centroids
+        
+    def forward(self, D):
+        out = D.unsqueeze(2) - self.weight.t().unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
+        out = (out**2) #mxdxc
+        return out
+        
+    def get_margins(self):
+        #X is dxc, out is cxc matrix, containing the distances ||X_i-X_j||
+        # only the upper triangle of out is needed
+        X = self.weight.data.t()
+        out = X.t().unsqueeze(2) - X.unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
+        out= torch.sqrt(torch.sum((out**2),1))
+        triu_idx = torch.triu_indices(out.shape[0], out.shape[0],1)
+        return out[triu_idx[0],triu_idx[1]]
+        
+class CTroidDO(nn.Module):
+    __constants__ = ['in_features', 'out_features']
 
+    def __init__(self,in_features,out_features,bias: bool = False, p=0.2, gamma=0.5, gamma_min=0.05,gamma_max=1000):
+        super(CTroidDO, self).__init__()
+
+        self.in_features = in_features
+        self.out_features = out_features
+        self.gamma=nn.Parameter(gamma*torch.ones(out_features)) #exp(-gamma_k||D_j.^T - C_.k||^2)
+        self.squared_distances = Centroid_Squared_Distances(in_features,out_features)
+        self.dropout = nn.Dropout(p=p)
+        if bias:
+            self.bias = nn.Parameter(torch.zeros(out_features))
+        else:
+            self.register_parameter('bias', None)
+        self.gamma_min = gamma_min
+        self.gamma_max = gamma_max
+
+    def forward(self, D):
+        out = self.squared_distances(D) #mxdxc
+        out = self.dropout(out)
+        out = -(out.sum(1)*self.gamma) # (mxc)
+        if self.bias is not None:
+            out = out+self.bias
+        return out # (mxc)
+    
+    def conf(self,D):
+        return self.conf_logits(self.forward(D))
+
+    def conf_logits(self,logits):
+        return torch.exp(logits)
+
+    def conf_view(self, D,i):
+        """
+        For plotting purposes - returns a two-dimensional view (dimensions i and i+1) of the confidences assigned to the points in D (m x 2)
+        """
+        out = D.unsqueeze(2) - self.squared_distances.weight.t()[[i,i+1],:].unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc
+        out = -self.gamma*torch.sum(out**2,1) # (mxc)
+        if self.bias is not None:
+            out = out+self.bias
+        return torch.exp(out)
+    
+    def prox(self):
+        torch.clamp_(self.gamma, self.gamma_min, self.gamma_max)
+            
+    def get_margins(self):
+        return self.squared_distances.get_margins()
+        
 class CTroid(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
