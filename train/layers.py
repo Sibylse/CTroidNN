@@ -49,7 +49,7 @@ class CTroidDO(nn.Module):
     def forward(self, D):
         if self.training:
             #out = 2*torch.matmul(D,self.squared_distances.weight.t()) #- torch.sum(self.squared_distances.weight**2,1)
-            out = F.linear(0.5*D, 2*self.squared_distances.weight*self.gamma, self.bias) - torch.sum(self.squared_distances.weight**2,1)*self.gamma
+            out = F.linear(0.5*D, 2*self.gamma*self.squared_distances.weight, self.bias) - torch.sum(self.squared_distances.weight**2,1)*self.gamma
             #out = out*self.gamma # (mxc)
         else:
             out = self.squared_distances(D) #mxdxc
