@@ -52,8 +52,8 @@ class CTroidDO(nn.Module):
             out = F.linear(0.5*D, 2*self.gamma.unsqueeze(1)*self.squared_distances.weight, self.bias) - torch.sum(self.squared_distances.weight**2,1)*self.gamma
             #out = out*self.gamma # (mxc)
         else:
-            out = self.squared_distances(D) #mxdxc
-            out = self.dropout(out)
+            out = self.squared_distances(0.5*D) #mxdxc
+            #out = self.dropout(out)
             out = -(out.sum(1)*self.gamma) # (mxc)
             if self.bias is not None:
                 out = out+self.bias
