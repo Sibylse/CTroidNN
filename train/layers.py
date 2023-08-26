@@ -8,7 +8,7 @@ class Centroid_Squared_Distances(nn.Module):
     def __init__(self,in_features,out_features):
         super(Centroid_Squared_Distances, self).__init__()
         self.weight = nn.Parameter(torch.Tensor(out_features, in_features)) # (cxd) centroids
-        init.kaiming_uniform_(self.weight, a=math.sqrt(5))
+        nn.init.kaiming_uniform_(self.weight, a=math.sqrt(5))
         
     def forward(self, D):
         out = D.unsqueeze(2) - self.weight.t().unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
