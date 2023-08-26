@@ -68,8 +68,8 @@ class CTroidDO(nn.Module):
     
     def prox(self):
         torch.clamp_(self.gamma, self.gamma_min, self.gamma_max)
-        if self.bias is not None:
-            torch.clamp_(self.bias, 0)
+        #if self.bias is not None:
+        #    torch.clamp_(self.bias, 0)
             
     def get_margins(self):
         return self.squared_distances.get_margins()
