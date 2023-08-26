@@ -37,11 +37,10 @@ class CTroidDO(nn.Module):
         self.dropout = nn.Dropout(p=p)
         if bias:
             self.bias = nn.Parameter(torch.empty(out_features))
-            if self.bias is not None:
-                fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.squared_distances.weight)
-                bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
-                nn.init.uniform_(self.bias, -bound, bound)
-                self.bias.data = self.bias.data
+            fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.squared_distances.weight)
+            bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
+            nn.init.uniform_(self.bias, -bound, bound)
+            #self.bias.data = self.bias.data
         else:
             self.register_parameter('bias', None)
         self.gamma_min = gamma_min
@@ -49,7 +48,7 @@ class CTroidDO(nn.Module):
 
     def forward(self, D):
         if self.training:
-            out = 2*torch.matmul(self.squared_distances.weight.t(),D) - torch.sum(self.squared_distances.weight**2,1)
+            out = 2*torch.matmul(D,self.squared_distances.weight.t()) - torch.sum(self.squared_distances.weight**2,1)
         else:
             out = self.squared_distances(D) #mxdxc
             out = self.dropout(out)
