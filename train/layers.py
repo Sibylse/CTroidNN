@@ -41,16 +41,19 @@ class CTroidDO(nn.Module):
                 fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.squared_distances.weight)
                 bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
                 nn.init.uniform_(self.bias, -bound, bound)
-                self.bias.data = self.bias.data+ torch.sum(self.squared_distances.weight**2,1)
+                self.bias.data = self.bias.data
         else:
             self.register_parameter('bias', None)
         self.gamma_min = gamma_min
         self.gamma_max = gamma_max
 
     def forward(self, D):
-        out = self.squared_distances(D) #mxdxc
-        out = self.dropout(out)
-        out = -(out.sum(1)*self.gamma) # (mxc)
+        if self.training:
+            out = 2*torch.matmul(self.squared_distances.weight.t(),D) - torch.sum(self.squared_distances.weight**2,1)
+        else:
+            out = self.squared_distances(D) #mxdxc
+            out = self.dropout(out)
+            out = -(out.sum(1)*self.gamma) # (mxc)
         if self.bias is not None:
             out = out+self.bias
         return out # (mxc)
