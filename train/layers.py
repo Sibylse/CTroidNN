@@ -8,6 +8,7 @@ class Centroid_Squared_Distances(nn.Module):
     def __init__(self,in_features,out_features):
         super(Centroid_Squared_Distances, self).__init__()
         self.weight = nn.Parameter(torch.Tensor(out_features, in_features)) # (cxd) centroids
+        nn.init.orthogonal_(self.weight)
         
     def forward(self, D):
         out = D.unsqueeze(2) - self.weight.t().unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
@@ -45,8 +46,8 @@ class CTroidDO(nn.Module):
         out = self.squared_distances(D) #mxdxc
         out = self.dropout(out)
         out = -(out.sum(1)*self.gamma) # (mxc)
-        if self.bias is not None:
-            out = out-self.bias
+        #if self.bias is not None:
+        #    out = out-self.bias
         return out # (mxc)
     
     def conf(self,D):
