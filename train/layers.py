@@ -41,7 +41,7 @@ class CTroidDO(nn.Module):
                 fan_in, _ = nn.init._calculate_fan_in_and_fan_out(self.squared_distances.weight)
                 bound = 1 / math.sqrt(fan_in) if fan_in > 0 else 0
                 nn.init.uniform_(self.bias, -bound, bound)
-                self.bias.data = self.bias.data- torch.sum(self.squared_distances.weight**2,1)
+                self.bias.data = self.bias.data+ torch.sum(self.squared_distances.weight**2,1)
         else:
             self.register_parameter('bias', None)
         self.gamma_min = gamma_min
