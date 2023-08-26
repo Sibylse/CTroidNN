@@ -24,7 +24,7 @@ class Centroid_Squared_Distances(nn.Module):
         triu_idx = torch.triu_indices(out.shape[0], out.shape[0],1)
         return out[triu_idx[0],triu_idx[1]]
 
-class CTroidD_poc(nn.Module):
+class CTroidDO(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
     def __init__(self,in_features,out_features, p=0.2, gamma=0.5, gamma_min=0.05,gamma_max=1000):
@@ -69,7 +69,7 @@ class CTroidDO_poc(nn.Module):
     __constants__ = ['in_features', 'out_features']
 
     def __init__(self,in_features,out_features,bias: bool = False, p=0.2, gamma=0.5, gamma_min=0.05,gamma_max=1000):
-        super(CTroidDO, self).__init__()
+        super(CTroidDO_poc, self).__init__()
 
         self.in_features = in_features
         self.out_features = out_features
