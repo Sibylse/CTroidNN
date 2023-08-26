@@ -46,7 +46,7 @@ class CTroidDO(nn.Module):
         out = self.dropout(out)
         out = -(out.sum(1)*self.gamma) # (mxc)
         if self.bias is not None:
-            out = out+self.bias
+            out = out-self.bias
         return out # (mxc)
     
     def conf(self,D):
@@ -62,11 +62,13 @@ class CTroidDO(nn.Module):
         out = D.unsqueeze(2) - self.squared_distances.weight.t()[[i,i+1],:].unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc
         out = -self.gamma*torch.sum(out**2,1) # (mxc)
         if self.bias is not None:
-            out = out+self.bias
+            out = out-self.bias
         return torch.exp(out)
     
     def prox(self):
         torch.clamp_(self.gamma, self.gamma_min, self.gamma_max)
+        if self.bias is not None:
+            torch.clamp_(self.bias, 0)
             
     def get_margins(self):
         return self.squared_distances.get_margins()
