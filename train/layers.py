@@ -51,8 +51,8 @@ class CTroidDO(nn.Module):
         out = self.squared_distances(D) #mxdxc
         out = self.dropout(out)
         out = -(out.sum(1)*self.gamma) # (mxc)
-        #if self.bias is not None:
-        #    out = out-self.bias
+        if self.bias is not None:
+            out = out-self.bias
         return out # (mxc)
     
     def conf(self,D):
