@@ -142,7 +142,7 @@ class CTroid(nn.Module):
     def forward(self, D):
         out = D.unsqueeze(2) - self.weight.t().unsqueeze(0) #D is mxd, weight.t() (centroids) is dxc 
         out = (out**2) #mxdxc
-        if self.d_view is not None:
+        if self.d_view is not None and self.training:
             out = out.view(-1,int(self.in_features/self.d_view),self.d_view,self.out_features).sum(2)
         else :
             out = out.sum(1)
