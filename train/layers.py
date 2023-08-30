@@ -153,7 +153,7 @@ class CTroid(nn.Module):
         return self.conf_logits(self.forward(D))
 
     def conf_logits(self,logits):
-        if self.d_view is not None:
+        if self.d_view is not None and self.training:
             return torch.exp(torch.sum(logits,1))
         return torch.exp(logits)
 
