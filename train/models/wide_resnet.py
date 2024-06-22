@@ -186,5 +186,5 @@ class WideResNet(nn.Module):
 
 
 def wresnet(classifier, coeff=None, mod=False, **kwargs):
-    embed = WideResNet(coeff=coeff, mod=mod,  **kwargs)
+    embed = WideResNetEmbed(coeff=coeff, mod=mod,  **kwargs)
     return WideResNet(embed,classifier)
