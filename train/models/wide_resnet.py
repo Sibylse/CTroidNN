@@ -60,16 +60,15 @@ class WideBasic(nn.Module):
         return out
 
 
-class WideResNet(nn.Module):
+class WideResNetEmbed(nn.Module):
     def __init__(
         self,
-        spectral_normalization=True,
         mod=True,
         depth=28,
         widen_factor=10,
         num_classes=None,
         dropout_rate=0.3,
-        coeff=3,
+        coeff=None,
         n_power_iterations=1,
         batchnorm_momentum=0.01,
         temp=1.0,
@@ -92,7 +91,7 @@ class WideResNet(nn.Module):
 
             conv = nn.Conv2d(in_c, out_c, kernel_size, stride, padding, bias=False)
 
-            if not spectral_normalization:
+            if coeff is None:
                 return conv
 
             # NOTE: Google uses the spectral_norm_fc in all cases
@@ -124,8 +123,8 @@ class WideResNet(nn.Module):
         self.activation = F.leaky_relu if self.mod else F.relu
 
         self.num_classes = num_classes
-        if num_classes is not None:
-            self.linear = nn.Linear(nStages[3], num_classes)
+        #if num_classes is not None:
+        #    self.linear = nn.Linear(nStages[3], num_classes)
 
         nonlinearity = "leaky_relu" if self.mod else "relu"
         for m in self.modules():
@@ -139,7 +138,7 @@ class WideResNet(nn.Module):
                 nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity=nonlinearity)
                 nn.init.constant_(m.bias, 0)
         self.feature = None
-        self.temp = temp
+        #self.temp = temp
 
     def _wide_layer(self, channels, num_blocks, stride, input_size):
         strides = [stride] + [1] * (num_blocks - 1)
@@ -164,11 +163,28 @@ class WideResNet(nn.Module):
         out = out.flatten(1)
         self.feature = out.clone().detach()
 
-        if self.num_classes is not None:
-            out = self.linear(out) / self.temp
+        #if self.num_classes is not None:
+        #    out = self.linear(out) / self.temp
         return out
 
+class WideResNet(nn.Module):
+    def __init__(self, embedding, classifier):
+        super(WideResNet, self).__init__()
+        self.embed = embedding
+        self.classifier = classifier
 
-def wrn(temp=1.0, spectral_normalization=True, mod=True, **kwargs):
-    model = WideResNet(spectral_normalization=spectral_normalization, mod=mod, temp=temp, **kwargs)
-    return model
+    def forward(self, x):
+        out = self.embed(x)
+        out = self.classifier(out)
+        return out
+
+    def conf(self,x):
+        out = self.embed(x)
+        if hasattr(self.classifier,'conf'):
+            return self.classifier.conf(out)
+        return F.softmax(self.classifier(out),dim=1)
+
+
+def wresnet(classifier, coeff=None, mod=False, **kwargs):
+    embed = WideResNet(coeff=coeff, mod=mod,  **kwargs)
+    return WideResNet(embed,classifier)
