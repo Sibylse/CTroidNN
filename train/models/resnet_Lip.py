@@ -95,7 +95,7 @@ class Bottleneck(nn.Module):
         out += self.shortcut(x)
         out = self.activation(out)
 
-      return out
+        return out
 
 
 class ResNetEmbedLip(nn.Module):
