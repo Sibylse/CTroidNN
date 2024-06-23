@@ -33,7 +33,7 @@ class BasicBlock(nn.Module):
     def __init__(self, input_size, wrapped_conv, in_planes, planes, stride=1, mod=True):
         super(BasicBlock, self).__init__()
         self.conv1 = wrapped_conv(input_size, in_planes, planes, kernel_size=3, stride=stride)
-        #self.bn1 = nn.BatchNorm2d(planes)
+        self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = wrapped_conv(math.ceil(input_size / stride), planes, planes, kernel_size=3, stride=1)
         #self.bn2 = nn.BatchNorm2d(planes)
         self.mod = mod
@@ -50,8 +50,8 @@ class BasicBlock(nn.Module):
             )
 
     def forward(self, x):
-        #out = self.activation(self.bn1(self.conv1(x)))
-        out = self.activation(self.conv1(x))
+        out = self.activation(self.bn1(self.conv1(x)))
+        #out = self.activation(self.conv1(x))
         #out = self.bn2(self.conv2(out))
         out = self.conv2(out)
         out += self.shortcut(x)
